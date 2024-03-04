@@ -28,7 +28,7 @@ def create_monthly_counts_df(df):
     return monthly_counts_df
 
 # Load dataset day.csv
-day_df = pd.read_csv("./day.csv")
+day_df = pd.read_csv("day.csv")
 
 # Ubah tipe data kolom 'dteday' menjadi datetime
 day_df['dteday'] = pd.to_datetime(day_df['dteday'])
