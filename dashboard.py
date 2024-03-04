@@ -7,7 +7,7 @@ from babel.numbers import format_currency
 # Mengatur gaya seaborn
 sns.set(style='dark')
 
-# Fungsi untuk membuat DataFrame untuk jumlah penyewaan sepeda
+# Membuat fungsi untuk DataFrame jumlah penyewaan sepeda
 def create_bike_sharing_counts(df):
     bike_sharing_counts_df = df.resample(rule='D', on='dteday').agg({
         "cnt": "sum"
@@ -19,21 +19,23 @@ def create_bike_sharing_counts(df):
     
     return bike_sharing_counts_df
 
-def create_season_df(df):
-    season_df = df.groupby(["season", "yr"]).cnt.sum().sort_values(ascending=False).reset_index()
-    return season_df
-
+# Membuat fungsi untuk DataFrame jumlah penyewaan sepeda setiap bulan
 def create_monthly_counts_df(df):
     monthly_counts_df = df.groupby(['yr', 'mnth']).cnt.sum().unstack().fillna(0)
     return monthly_counts_df
 
-# Load dataset day.csv
+# Membuat fungsi untuk DataFrame jumlah penyewaan sepeda berdasarkan season dan tahun
+def create_season_df(df):
+    season_df = df.groupby(["season", "yr"]).cnt.sum().sort_values(ascending=False).reset_index()
+    return season_df
+
+# Memuat dataset day.csv
 day_df = pd.read_csv("day.csv")
 
 # Ubah tipe data kolom 'dteday' menjadi datetime
 day_df['dteday'] = pd.to_datetime(day_df['dteday'])
 
-# Membuat komponen filter tanggal menggunakan sidebar
+# Membuat komponen filter tanggal untuk sidebar
 min_date = day_df["dteday"].min()
 max_date = day_df["dteday"].max()
 
@@ -57,14 +59,13 @@ bike_sharing_counts_df = create_bike_sharing_counts(main_df)
 st.header('Bike Sharing Dashboard :sparkles:')
 st.subheader('Rent Amount')
 
-# Menampilkan informasi total order dan total revenue dalam bentuk metric
+# Menampilkan informasi jumlah sewa sepeda
 col1, col2 = st.columns(2)
 
 with col1:
     rent_amount = bike_sharing_counts_df.total_count.sum()
     st.metric("Total rent", value=rent_amount)
 
-# Memplot grafik jumlah penyewaan sepeda harian
 fig1, ax1 = plt.subplots(figsize=(16, 8))
 ax1.plot(
     bike_sharing_counts_df["dteday"],
@@ -83,11 +84,33 @@ plt.title('Daily Bike Sharing Counts', fontsize=20)
 # Menampilkan gambar grafik di Streamlit
 st.pyplot(fig1)
 
+
+# Membuat DataFrame untuk jumlah total sepeda yang disewa setiap bulan dan tahun
+monthly_counts_df = create_monthly_counts_df(main_df)
+
+# Membuat visualisasi
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+
+# Plotting untuk setiap tahun
+for year in monthly_counts_df.index:
+    plt.plot(monthly_counts_df.loc[year], marker='o', label=f'Tahun {year + 2011}')
+
+plt.title('Bike Sharing Count by Month (2011-2012)')
+plt.xlabel('Month')
+plt.ylabel('Total Count')
+plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'])
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+plt.tight_layout()
+
+# Menampilkan gambar grafik di Streamlit
+st.pyplot(fig2)
+
 # Membuat DataFrame untuk jumlah total penyewaan sepeda berdasarkan musim
 season_df = create_season_df(main_df)
 
 # Membuat Clustered Bar Chart menggunakan seaborn
-fig2 = plt.figure(figsize=(10, 6))
+fig3 = plt.figure(figsize=(10, 6))
 
 # Menentukan urutan kategori hue
 hue_order = [0, 1]
@@ -107,25 +130,5 @@ plt.ylabel('Total Count')
 plt.legend(title='Year', labels=['2011', '2012'])
 
 # Menampilkan gambar grafik di Streamlit
-st.pyplot(fig2)
-
-# Membuat DataFrame untuk jumlah total sepeda yang disewa setiap bulan dan tahun
-monthly_counts_df = create_monthly_counts_df(main_df)
-
-# Membuat visualisasi
-fig3, ax3 = plt.subplots(figsize=(10, 6))
-
-# Plotting untuk setiap tahun
-for year in monthly_counts_df.index:
-    plt.plot(monthly_counts_df.loc[year], marker='o', label=f'Tahun {year + 2011}')
-
-plt.title('Bike Sharing Count by Month (2011-2012)')
-plt.xlabel('Month')
-plt.ylabel('Total Count')
-plt.xticks(range(1, 13), ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'])
-plt.grid(True, linestyle='--', alpha=0.7)
-plt.legend()
-plt.tight_layout()
-
-# Menampilkan gambar grafik di Streamlit
 st.pyplot(fig3)
+
